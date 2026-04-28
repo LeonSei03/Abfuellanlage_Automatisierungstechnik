@@ -1,0 +1,21 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1">
+  <DUT Name="enum_states" Id="{e48e9dd6-550f-4d94-b517-a818feddb085}">
+    <Declaration><![CDATA[{attribute 'qualified_only'}
+{attribute 'strict'}
+{attribute 'to_string'}
+TYPE enum_states :
+(
+	error, // rot blinken
+	stop, // Rot, Gelb blinkem
+	off, // Rot leuchten
+	init, // Grün blinken
+	production, // grün leuchten
+	ready, // gelb, grün blinken
+	done, // geld, grün leuchten
+	setup // gelb blinken
+);
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

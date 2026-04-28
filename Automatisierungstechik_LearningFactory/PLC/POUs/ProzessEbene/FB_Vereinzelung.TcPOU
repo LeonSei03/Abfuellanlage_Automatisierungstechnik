@@ -1,0 +1,97 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1">
+  <POU Name="FB_Vereinzelung" Id="{63cd7eaa-960f-4d17-aaab-009caab2852d}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_Vereinzelung
+VAR_INPUT
+	
+	bEnable : BOOL; //Bedienereingabe
+	bExecute: BOOL; //Bedienereingabe 
+	
+	bSens1 : BOOL; //Flasche in Kamnmer
+	bSens2 : BOOL; // Flasche in Speicher 
+	bSens3 : BOOL; //Flasche am Kopf
+	
+END_VAR
+
+VAR_OUTPUT
+	bGate1 : BOOL; //Schleuse oben, wenn TRUE = Öffnen
+	bGate2: BOOL; //Schleuse unten, wenn TRUE = Öffnen 
+	nState : INT; //Variable für die CASE-Anweisung
+END_VAR
+VAR
+	tClose : TON; //Timer zum Schließen 
+	tCloseTime : TIME := T#1000MS; 
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF NOT bEnable OR NOT bExecute THEN 
+	bGate1 := FALSE; 
+	bGate2 := FALSE;
+	nState := 0; //Zustand auf IDLE bzw. ausgangslage setzen 
+	tClose(IN := FALSE, PT := tCloseTime);
+
+ELSE 
+	CASE nState OF 
+		0: //Warten auf Start mit bEnable und bExecute 
+			bGate1 := FALSE; 
+			bGate2 := FALSE; 
+			tClose(IN := FALSE, PT := tCloseTime);
+			
+			IF bExecute THEN 
+				nState := 1; //Wenn Execute dann auf State 1 Wechseln
+			END_IF
+		
+		1: //Warten auf Flasche im Speicher 
+			bGate1 := FALSE; 
+			bGate2 := FALSE;
+			tClose(IN := FALSE, PT := tCloseTime);
+			
+			IF bSens2 THEN 
+				nState := 2; // Wenn Flasche in Speicher dann Zustand 2
+			END_IF
+		
+		2: //obere Schleuse öffnen 
+			bGate1 := TRUE; //Obere Schleuse wird geöffnet 
+			bGate2 := FALSE; 
+			tClose(IN := FALSE, PT := tCloseTime);
+			
+			IF bSens1 THEN 
+				nState := 3; // Wenn Flasche in Kammer dann zu Zustand 3
+			END_IF
+		3: //obere Schleuse schließen 
+			bGate1 := FALSE; 
+			bGate2 := FALSE;
+			tClose(IN := TRUE, PT := tCloseTime); // Zeit zum schließen
+			
+			IF tClose.Q THEN //Wenn geschlossen zurücksetzen und Zustand 4 wechseln
+				tClose(IN := FALSE, PT := tCloseTime);
+				nState := 4;
+			END_IF
+		4: //Untere Schleuse öffnen 
+			bGate1 := FALSE;
+			bGate2 := TRUE; //untere schleuse wird geöffnet
+			tClose(IN := FALSE, PT := tCloseTime);
+			
+			IF NOT bSens1 THEN 
+				nState := 5;
+			END_IF
+		5: // Untere Schleuse Schließen
+			bGate1 := FALSE;
+			bGate2 := FALSE; //untere schleuse wird geschlossen
+			tClose(IN := TRUE, PT := tCloseTime);
+			
+			IF tClose.Q THEN 
+				tClose(IN := FALSE, PT := tCloseTime);
+				nState := 1;
+			END_IF
+			
+		ELSE //Falls irgend was anderes eintritt zustand 0 
+			bGate1 := FALSE; 
+			bGate2 := FALSE; 
+			tClose(IN := FALSE, PT := tCLoseTime);
+			nState := 0; 
+	END_CASE
+END_IF]]></ST>
+    </Implementation>
+  </POU>
+</TcPlcObject>

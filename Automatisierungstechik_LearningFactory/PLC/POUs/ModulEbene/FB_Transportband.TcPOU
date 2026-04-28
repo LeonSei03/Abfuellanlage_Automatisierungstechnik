@@ -1,0 +1,56 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1">
+  <POU Name="FB_Transportband" Id="{ac4a3196-a48b-4410-8f28-c96988b92c96}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_AbfuellModul
+VAR_INPUT
+	bEnable : BOOL;
+	bExecute : BOOL;
+END_VAR
+VAR_OUTPUT
+	eState : BOOL;
+END_VAR
+VAR
+	FB_Transport : BOOL;
+	FB_Vereinzelung : BOOL;
+	FB_Disp : BOOL;
+	nState : INT;
+	nStation : INT := 0; // bei welcher Station wir aktuell sind, dann wird +1 gezhält
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[// Startzustand
+IF NOT bEnable OR NOT bExecute THEN
+	nState := 0;
+
+ELSE
+	
+	CASE nState OF 
+		0: // OFF
+		bEnable := FALSE;
+		bExecute := FALSE;
+		FB_CNV.bEnable := FALSE;
+		FB_CNV.bExecute := FALSE;
+		FB_CNV.bHalt := FALSE;
+		
+		IF bEnable THEN
+			nState := 1; // wenn bEnable gehen wir in 2. Case rein
+		END_IF
+		
+		1: // Init
+		bEnable := FALSE;
+		bExecute := FALSE;
+		FB_CNV.bEnable := TRUE;
+		FB_CNV.bExecute := FALSE;
+		FB_CNV.bHalt := FALSE;
+		
+		2: // Ready
+		
+		
+	END_CASE
+
+
+
+END_IF]]></ST>
+    </Implementation>
+  </POU>
+</TcPlcObject>

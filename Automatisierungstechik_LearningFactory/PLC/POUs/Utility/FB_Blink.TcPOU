@@ -1,0 +1,69 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1">
+  <POU Name="FB_Blink" Id="{833d41bc-4cd5-42e2-83da-79c813f64b88}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_Blink
+// Enumerationen einbinden mit den Zuständen
+VAR_INPUT
+   	State : enum_states;
+END_VAR
+
+VAR_OUTPUT
+	
+	// Output Signale für Ampel
+	//bAmpelRot : IFC_HW;			// Signal-LED Rot
+	//bAmpelGelb : IFC_HW;			// Signal-LED Gelb
+	//bAmpelGrun : IFC_HW;
+
+	bAmpelRot : BOOL;			// Signal-LED Rot
+	bAmpelGelb : BOOL;			// Signal-LED Gelb
+	bAmpelGrun : BOOL;
+END_VAR
+
+VAR
+	fbTon   : TON;
+	bBlink  : BOOL;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+bAmpelRot := FALSE;
+bAmpelGelb := FALSE;
+bAmpelGrun := FALSE;
+
+// einfacher Blinkgenerator
+fbTon(IN := NOT fbTon.Q, PT := T#500ms);
+IF fbTon.Q THEN
+    bBlink := NOT bBlink;
+END_IF;
+
+CASE State OF
+    State.off:
+        bAmpelRot := TRUE;
+
+    State.init:
+        bAmpelGrun := bBlink;
+
+    State.ready:
+        bAmpelGelb := bBlink;
+        bAmpelGrun := bBlink;
+
+    State.production:
+        bAmpelGrun := TRUE;
+
+    State.done:
+        bAmpelGelb := TRUE;
+        bAmpelGrun := TRUE;
+
+    State.error:
+        bAmpelRot := bBlink;
+
+    State.stop:
+        bAmpelRot := bBlink;
+        bAmpelGelb := bBlink;
+
+    State.setup:
+        bAmpelGelb := bBlink;
+END_CASE;]]></ST>
+    </Implementation>
+  </POU>
+</TcPlcObject>

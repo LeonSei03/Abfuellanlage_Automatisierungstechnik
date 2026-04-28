@@ -1,0 +1,39 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1">
+  <POU Name="FB_DigitalInput" Id="{367e715b-a81f-4da7-bf9c-7456694634ed}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_DigitalInput
+VAR_INPUT
+	bSensSignal : BOOL;
+END_VAR
+VAR_OUTPUT
+	bSensLogic : BOOL; 
+END_VAR
+VAR
+	_Invert : BOOL := FALSE;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF _Invert THEN
+	bSensLogic := NOT bSensSignal;
+ELSE	
+	bSensLogic := bSensSignal;
+END_IF]]></ST>
+    </Implementation>
+    <Method Name="FB_Init" Id="{bd9f4947-f586-42ca-97f4-2b04c18f9681}">
+      <Declaration><![CDATA[//FB_Init is always available implicitly and it is used primarily for initialization.
+//The return value is not evaluated. For a specific influence, you can also declare the
+//methods explicitly and provide additional code there with the standard initialization
+//code. You can evaluate the return value.
+METHOD FB_Init: BOOL
+VAR_INPUT
+    bInitRetains: BOOL; // TRUE: the retain variables are initialized (reset warm / reset cold)
+    bInCopyCode: BOOL;  // TRUE: the instance will be copied to the copy code afterward (online change)   
+	Invert : BOOL;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[_Invert := Invert;]]></ST>
+      </Implementation>
+    </Method>
+  </POU>
+</TcPlcObject>

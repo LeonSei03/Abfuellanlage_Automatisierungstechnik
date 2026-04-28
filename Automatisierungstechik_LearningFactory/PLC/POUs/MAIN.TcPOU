@@ -1,0 +1,55 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1">
+  <POU Name="MAIN" Id="{d64f338a-4270-4f33-a774-46eee537a6e6}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM MAIN
+VAR
+	fb_Vereinzelung : FB_Vereinzelung;
+	fb_CNV : FB_CNV; 
+	bSens1: BOOL;
+	bSens2: BOOL;
+	bSens3: BOOL;
+	fbEndXmin : FB_DigitalInput(TRUE);
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[fb_Vereinzelung(
+	bEnable:= IFC_HW.bEnable, 
+	bExecute:= IFC_HW.bExecute, 
+	bSens1:= IFC_HW.bEinzelSens3, //Achtung hab ich vertauscht
+	bSens2:= IFC_HW.bEinzelSens2, 
+	bSens3:= IFC_HW.bEinzelSens1); //Achtung hab ich vertauscht 
+	
+// Schleuse oben
+IF fb_Vereinzelung.bGate1 THEN 
+    IFC_HW.bR1AKT1 := TRUE;   // oben öffnen
+    IFC_HW.bR2AKT1 := FALSE;  // oben schließen aus
+ELSE 
+    IFC_HW.bR1AKT1 := FALSE;  
+    IFC_HW.bR2AKT1 := TRUE;   // oben schließen
+END_IF;
+
+// Schleuse unten
+IF fb_Vereinzelung.bGate2 THEN
+    IFC_HW.bR1AKT2 := TRUE;   // unten öffnen
+    IFC_HW.bR2AKT2 := FALSE;  // unten schließen aus
+ELSE
+    IFC_HW.bR1AKT2 := FALSE;
+    IFC_HW.bR2AKT2 := TRUE;   // unten schließen
+END_IF;
+
+fb_CNV(
+	bEnable:= IFC_HW.bEnable, 
+	bExecute:= IFC_HW.bExecute, 
+	bHalt:= IFC_HW.bBandSens1, 
+	rVel:= 500, 
+	//eState=> , 
+	ax:= IFC_HW.ax_BandMotor);
+	
+fbEndXmin(bSensSignal:= Ifc_HW.bManEndXmin, bSensLogic=> );
+
+// zum Wert auslesen
+IF fbEndXmin.bSensLogic THEN
+	// Achse dadrf nciht in negative Richtung fahren
+END_IF]]></ST>
+    </Implementation>
+  </POU>
+</TcPlcObject>
