@@ -9,6 +9,10 @@ VAR
 	bSens2: BOOL;
 	bSens3: BOOL;
 	fbEndXmin : FB_DigitalInput(TRUE);
+	
+	bError : BOOL;
+	ErrorID : DWORD;
+	reset : BOOL;
 END_VAR]]></Declaration>
     <Implementation>
       <ST><![CDATA[fb_Vereinzelung(
@@ -49,7 +53,31 @@ fbEndXmin(bSensSignal:= Ifc_HW.bManEndXmin, bSensLogic=> );
 // zum Wert auslesen
 IF fbEndXmin.bSensLogic THEN
 	// Achse dadrf nciht in negative Richtung fahren
-END_IF]]></ST>
+END_IF
+
+// in der main das instanzieren
+// fbAbfuellmodul instanzieren
+// 	bEnable := ifc_hw.bEnable ,
+// 	bExecute := ifc_hw.bExecute,
+// bStop := ,
+// 
+
+// das hier bleibt in der main
+IF bError AND (ErrorID = 9001 OR ErrorID = 9003) THEN
+	ifc_hw.bStop := TRUE;
+END_IF
+
+
+
+ifc_hw.bereset := reset;
+
+IF bError AND reset THEN
+	ifc_hw.bStop := FALSE;
+	reset := FALSE;
+END_IF
+
+// im ifc eine globale vairable schreiben breset
+]]></ST>
     </Implementation>
   </POU>
 </TcPlcObject>

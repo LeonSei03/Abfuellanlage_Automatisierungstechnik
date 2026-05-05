@@ -20,6 +20,8 @@ VAR
 	mcReset : MC_Reset;
 	mcVelocity : MC_MoveVelocity;
 	mcHalt : MC_Halt;
+	bStop : BOOL;
+	mcStop : MC_Stop;
 END_VAR
 
 // für achsenreferenz neue Variablen bereich
@@ -81,6 +83,13 @@ mcHalt(
 
 ax.ReadStatus(); // info der Achse zyklisch holen
 
+bStop := ifc_Hw.bStop;
+
+IF bStop THEN
+	nState = 80; // Stop conveyer
+	
+END_IF
+
 IF ax.Status.Error THEN
 	nState := 99; // Error State
 
@@ -95,6 +104,7 @@ CASE nState OF
 	mcReset.Execute := FALSE;
 	mcVelocity.Execute := FALSE;
 	mcHalt.Execute := FALSE;
+	
 	
 	IF ax.Status.Error THEN
 		nState := 99; // Error State
@@ -156,6 +166,26 @@ CASE nState OF
 	IF NOT bExecute AND NOT bHalt THEN
 		nState := 2; // READY 
 	END_IF
+	
+	80: // Stop cNV
+	mcVelocity.Execute := FALSE;
+	mcHalt.Execute := FALSE;
+	mcStop.Execute := TRUE;
+	
+	IF mcStop.Done AND NOT bStop THEN
+		nState := 81;
+	END_IF
+	
+	81: // Re-Init
+	mcVelocity.Execute := FALSE;
+	mcHalt.Execute := FALSE;
+	mcStop.Execute := FALSE;
+	mcReset.Execute := TRUE;
+	
+	IF mcReset.Done THEN
+		nState := 3;
+	END_IF
+	
 	
 	99: // Error State
 	mcPower.Enable := FALSE;

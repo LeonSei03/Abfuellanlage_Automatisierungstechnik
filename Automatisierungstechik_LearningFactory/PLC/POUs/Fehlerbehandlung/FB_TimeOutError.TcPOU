@@ -1,0 +1,94 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1">
+  <POU Name="FB_TimeOutError" Id="{abdc8562-a112-4c13-b334-964eaf8576f2}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_TimeOutError
+VAR_INPUT // siehe handy bild für rest
+	bReset : BOOL;
+	bIN : BOOL;
+	bZiel : BOOL;
+END_VAR
+VAR_OUTPUT
+	bError : BOOL;
+	ErrorID : BOOL;
+END_VAR
+VAR
+	timer : Ton;
+END_VAR
+
+// FB_transport
+// fehlerdirektionsbausteine
+//fbTO _Transport : FB_TimeOutError(9001, T#10S);
+// ausgänge erweitern
+//bError : BOOL;
+//ErrorID : DWORD;
+// rbtO_Transport : FB_timeouterror(9001, T#10s);
+// in die normale VAR
+bStop : BOOL;
+
+
+// im prgrammteil instanzieren
+fbTO_TransportTHIS^(
+	bReset:= , 
+	bIN:= eState = E_Satet.Produtction, 
+	bZiel:= eState = E_State.Done, 
+	bError=> bError, 
+	ErrorID=> ErrorID);
+
+bStop := ifc_hw.bStop;
+// dann um die Case of eine If machen wo wir bStop abfragen
+
+// FB Filling modul 
+// im tunktionsaufruf der fbtransport
+// ausgänge erweitern
+// bError : BOOL;
+// ErrorID : DWORD;
+// nMemState : INT;
+
+// variable für bStop anlegen
+bStop : BOOL;
+// programmblock
+bStop := ifc_hw.bStop;
+IF bStop THEN
+	nMemState := nState;
+END_IF]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+
+timer(IN:= , PT:=_PT, Q=> , ET=> );
+
+IF bIN THEN
+	timer.In := TRUE;
+END_IF
+
+IF bZiel THEN
+	timer.IN := FALSE;
+END_IF
+
+IF timer.Q THEN
+	bError := TRUE;
+	ErrorID := _ErrorID;
+ELSIF NOT timer.Q OR bReset THEN
+	bError := FALSE;
+	ErrorID := 0;
+	]]></ST>
+    </Implementation>
+    <Method Name="FB_Init" Id="{0d65c7bb-587e-4a58-b680-fa3dc38136bc}">
+      <Declaration><![CDATA[//FB_Init is always available implicitly and it is used primarily for initialization.
+//The return value is not evaluated. For a specific influence, you can also declare the
+//methods explicitly and provide additional code there with the standard initialization
+//code. You can evaluate the return value.
+METHOD FB_Init: BOOL
+VAR_INPUT
+    bInitRetains: BOOL; // TRUE: the retain variables are initialized (reset warm / reset cold)
+    bInCopyCode: BOOL;  // TRUE: the instance will be copied to the copy code afterward (online change)
+	ErrorID : DWORD;
+	PT : Time;   
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[_ErrorID := ErrorID; 
+_PT := PT;]]></ST>
+      </Implementation>
+    </Method>
+  </POU>
+</TcPlcObject>
